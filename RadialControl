@@ -1,0 +1,222 @@
+<UserControl
+    x:Class="HotStar.WP.Radial.RadialRing"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:BigRadialControl"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400"
+    Loaded="UserControl_Loaded">
+    <Grid Margin="10,5,10,5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Canvas>
+            <Ellipse x:Name="bgEllipse" Height="214" Width="214"  Stroke="White" 
+                     StrokeThickness="14" Canvas.ZIndex="1" >
+                <Ellipse.Fill>
+                    <ImageBrush x:Name="radImage" Stretch="UniformToFill" ImageSource="{Binding ImgSource}"></ImageBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse x:Name="bgMarginEllipse" Height="214" Width="214"  Stroke="#C5C5C5" 
+                     StrokeThickness="10" Canvas.ZIndex="2" >
+              
+            </Ellipse>            
+            <Path x:Name="bgArc1"  StrokeThickness="10"  Stroke="#33CC93" 
+                  Height="214" Width="214" 
+                   Canvas.ZIndex="3"  >
+                
+                <Path.Data>
+                    <PathGeometry>
+                        <PathGeometry.Figures>
+                            <PathFigure x:Name="ArcFugure" StartPoint="107,5" IsClosed="False">
+                                <ArcSegment  x:Name="ArcSeg"  Point="209,107" Size="102,102" IsLargeArc="False" SweepDirection="Clockwise"></ArcSegment>
+                            </PathFigure>
+                        </PathGeometry.Figures>
+                    </PathGeometry>
+                </Path.Data>
+
+            </Path>
+
+            <Grid x:Name="smallGrid" Canvas.ZIndex="3" Canvas.Left="199" Canvas.Top="97">
+                <Ellipse x:Name="fgEllipse" Height="20" Width="20"  Stroke="Green" 
+                     StrokeThickness="0" Canvas.ZIndex="3" >
+                    <Ellipse.Fill>
+                        <SolidColorBrush Color="#33CC93" ></SolidColorBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <TextBlock Text="{Binding CurrentPosition}" Canvas.ZIndex="4" Foreground="White" FontWeight="ExtraBold" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                </TextBlock>
+            </Grid>
+
+        </Canvas>
+    </Grid>
+</UserControl>
+
+Code Behind :
+
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Windows.Foundation;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+
+namespace HotStar.WP.Radial
+{
+    public sealed partial class RadialRing : UserControl, INotifyPropertyChanged
+    {
+
+        private double _radius = 107;
+        public double Radius
+        {
+            get
+            {
+                return _radius;
+            }
+
+            set
+            {
+                _radius = value;
+                RaisePropertyChanged("Radius");
+            }
+        }
+
+        private double _strokeWidth = 10;
+        public double StrokeWidth
+        {
+            get
+            {
+                return _strokeWidth;
+            }
+
+            set
+            {
+                _strokeWidth = value;
+                RaisePropertyChanged("StrokeWidth");
+            }
+        }
+
+        private int _maximum;
+        public int Maximum
+        {
+            get
+            {
+                return _maximum;
+            }
+
+            set
+            {
+                _maximum = value;
+                RaisePropertyChanged("Maximum");
+            }
+        }
+
+        private int _currentPosition;
+        public int CurrentPosition
+        {
+            get
+            {
+                return _currentPosition;
+            }
+
+            set
+            {
+                _currentPosition = value;
+                RaisePropertyChanged("CurrentPosition");
+            }
+        }
+
+        private string _imgSource;
+
+        public string ImgSource
+        {
+            get
+            {
+                return _imgSource;
+            }
+
+            set
+            {
+                _imgSource = value;
+                RaisePropertyChanged("ImgSource");
+            }
+        }
+
+        public RadialRing()
+        {
+            this.InitializeComponent();
+            this.DataContext = this;
+        }
+
+        protected void calulatePoints(int value, int totalValue)
+        {
+
+            if (ArcSeg != null)
+            {
+                double angle = 360 / totalValue * value;
+
+                setPoints(angle);
+
+            }
+        }
+
+        private void setPoints(double thetaAngle)
+        {
+           
+            double cx = Radius;
+            double cy = Radius;
+            double R = Radius;            
+            double x;
+            double y;
+            double radian;
+            double strokeThisckness = StrokeWidth;
+            double actualR =107 - (strokeThisckness/2) ;
+            double smallElipseRadius = 10;
+
+            radian = thetaAngle * Math.PI / 180;
+            x = cx + Math.Sin(radian) * actualR ;
+            y = cy - Math.Cos(radian) * actualR ;
+
+
+            if (x > R - 1 && thetaAngle >180)
+            {
+                x = x - 1;
+            }
+            if (x < R)
+            {
+                ArcSeg.IsLargeArc = true;
+            }
+            else
+                ArcSeg.IsLargeArc = false;
+
+            ArcSeg.Point = new Point(x, y);
+
+            smallGrid.SetValue(Canvas.LeftProperty, x - smallElipseRadius);
+            smallGrid.SetValue(Canvas.TopProperty, y - smallElipseRadius);
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+          
+            bgArc1.StrokeThickness = this.StrokeWidth;
+
+            calulatePoints(CurrentPosition, Maximum);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void RaisePropertyChanged([CallerMemberName] string caller = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(caller));
+            }
+        }
+    }
+}
