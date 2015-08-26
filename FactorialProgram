@@ -1,0 +1,44 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+class Solution {
+    static void Main(String[] args) {
+       
+        string input=Console.ReadLine();
+            int n;
+            int.TryParse(input,out n);
+            GoodFactorial(n);
+       
+    }
+     private static void GoodFactorial(int n)
+        {
+            int[] a=new int[200];
+            a[0] = 1;
+            int m = 1;
+            int temp = 0;
+            int x = 0;
+            int i, j;
+            
+            for(i=1;i<=n;i++)
+            {
+                for(j=0;j<m;j++)
+                {
+                    x = a[j] * i + temp;
+                    a[j] = x % 10;
+                    temp = x / 10;
+                }
+
+                while(temp>0)
+                {
+                    a[m] = temp % 10;
+                    temp = temp / 10;
+                    m++;
+                }
+            }
+
+            for(int k=m-1;k>=0;k--)
+            {
+                Console.Write(a[k]);
+            }
+        }
+}
